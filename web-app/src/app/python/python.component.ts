@@ -11,6 +11,8 @@ export class PythonComponent implements OnInit {
   state: number = 0
   code_url: string = "assets/game.tar.gz"
   game?: any = null
+  rows?: Array<number>
+  cols?: Array<number>
 
   constructor() {
     loadPyodide().then((pyodide: any) => this.initPyodide(pyodide))
@@ -31,6 +33,10 @@ export class PythonComponent implements OnInit {
         import game
         game.Game()
       `)
+      this.rows = Array(this.game.rows).fill(0).map((x,i)=>i);
+      this.cols = Array(this.game.cols).fill(0).map((x,i)=>i);
+      // console.log(this.game.board)
+      // console.log(this.game.board.get(0).get(1))
     })
   }
 

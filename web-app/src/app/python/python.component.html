@@ -1,2 +1,8 @@
-<p *ngIf="game">{{game.state}}</p>
-<button (click)="game.action()">Click me</button>
+<div *ngIf="game">
+    <p *ngFor="let row of rows">
+        <!-- <span *ngFor="let tile of row">{{tile}}</span> -->
+        <button *ngFor="let col of cols" (click)="game.reveal(row, col)" >
+            {{game.board.get(row).get(col)}} 
+        </button>
+    </p>
+</div>

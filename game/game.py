@@ -1,7 +1,5 @@
 import random
 import itertools
-from pprint import pprint
-import re
 
 class Game:
     def __init__(self, rows: int = 16, cols: int = 16, n_mines: int = 40) -> None:
@@ -16,16 +14,15 @@ class Game:
         self.board: list[list[str]] = [["#" for _ in range(cols)] for _ in range(rows)]
 
         self.numbers = [
-            [len(self.adjacent_mines((r, c))) for c in range(cols)] for r in range(rows)
+            [len(self.adjacent_mines(r, c)) for c in range(cols)] for r in range(rows)
         ]
     
     
     def reveal_all(self):
-        for pos in self._coordinates:
-            self.reveal(pos)
+        for r, c in self._coordinates:
+            self.reveal(r, c)
 
-    def reveal(self, pos: tuple[int, int]) -> bool:
-        r, c = pos
+    def reveal(self, r: int, c: int) -> bool:
         if self.mines[r][c]:
             self.board[r][c] = "X"
             return False
@@ -35,28 +32,27 @@ class Game:
             self.board[r][c] = str(n)
         else:
             self.board[r][c] = " "
-            for r1, c1 in self.neighbours(pos):
+            for r1, c1 in self.neighbours(r, c):
                 if self.board[r1][c1] != " ":
-                    self.reveal((r1, c1))
+                    self.reveal(r1, c1)
         return True
 
 
-    def adjacent_mines(self, pos: tuple[int, int]) -> list[tuple[int, int]]:
+    def adjacent_mines(self, r: int, c: int) -> list[tuple[int, int]]:
         result: list[tuple[int, int]] = []
-        for r, c in self.neighbours(pos):
-            if (r, c) != pos and self.mines[r][c]:
-                result.append((r, c))
+        for r1, c1 in self.neighbours(r, c):
+            if (r1, c1) != (r, c) and self.mines[r1][c1]:
+                result.append((r1, c1))
         return result
 
-    def neighbours(self, pos: tuple[int, int]) -> list[tuple[int, int]]:
-        x, y = pos
+    def neighbours(self, r: int, c: int) -> list[tuple[int, int]]:
         result: list[tuple[int, int]] = []
         for i in -1, 0, 1:
             for j in -1, 0, 1:
-                x1 = x + i
-                y1 = y + j
-                if 0 <= x1 < self.rows and 0 <= y1 < self.cols:
-                    result.append((x1, y1))
+                r1 = r + i
+                c1 = c + j
+                if 0 <= r1 < self.rows and 0 <= c1 < self.cols:
+                    result.append((r1, c1))
 
         return result
         
@@ -73,8 +69,8 @@ if __name__ == "__main__":
     game.pprint()
 
     while True:
-        pos = tuple(map(int, input("> ").split()))
-        res = game.reveal(pos)
+        r, c = tuple(map(int, input("> ").split()))
+        res = game.reveal(r, c)
         if not res:
             print("Boom!")
         game.pprint()
