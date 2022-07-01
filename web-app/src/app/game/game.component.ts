@@ -29,4 +29,29 @@ export class GameComponent implements OnInit {
   ngOnInit(): void {
   }
 
+  reveal(row: number, col: number) {
+    this.game.reveal(row, col)
+  }
+
+  getClassName(row: number, col: number) {
+    let tile = this.game.board.get(row).get(col)
+    if (tile == " ") {
+      tile = "blank"
+    } else if (tile == "#") {{
+      tile = "hidden"
+    }}
+    return 'game-tile-' + tile
+  }
+
+  getTile(row: number, col: number) {
+    let tile = this.game.board.get(row).get(col)
+    if (tile == " ") {
+      tile = "_"
+    } else if (tile == "#") {{
+      tile = "-"
+    }}
+
+    return tile
+  }
+
 }

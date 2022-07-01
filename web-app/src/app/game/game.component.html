@@ -1,8 +1,15 @@
-<div *ngIf="game">
-    <p *ngFor="let row of rows">
-        <!-- <span *ngFor="let tile of row">{{tile}}</span> -->
-        <button *ngFor="let col of cols" (click)="game.reveal(row, col)" >
-            {{game.board.get(row).get(col)}} 
-        </button>
-    </p>
+<mat-progress-spinner
+*ngIf="!game"
+class="example-margin"
+[mode]="'indeterminate'">
+</mat-progress-spinner>
+
+<div *ngIf="game" class="board">
+    <mat-card class="mat-elevation-z8">
+        <p *ngFor="let row of rows" class="board-row">
+            <button mat-icon-button *ngFor="let col of cols" (click)="reveal(row, col)" class="game-tile" [class]="getClassName(row, col)">
+                {{getTile(row, col)}} 
+            </button>
+        </p>
+    </mat-card>
 </div>
