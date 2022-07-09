@@ -35,6 +35,7 @@
           },
           "configurations": {
             "production": {
+              "baseHref": "/minesweeper/",
               "budgets": [
                 {
                   "type": "initial",
