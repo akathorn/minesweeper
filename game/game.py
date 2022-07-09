@@ -1,12 +1,14 @@
 import random
 import itertools
 
+
 class Game:
     def __init__(self, rows: int = 16, cols: int = 16, n_mines: int = 40) -> None:
         self.rows = rows
         self.cols = cols
         self._coordinates = list(itertools.product(range(rows), range(cols)))
 
+        self.n_mines = n_mines
         self.mines: list[list[int]] = [[0 for _ in range(cols)] for _ in range(rows)]
         for r, c in random.sample(self._coordinates, n_mines):
             self.mines[r][c] = 1
@@ -16,8 +18,11 @@ class Game:
         self.numbers = [
             [len(self.adjacent_mines(r, c)) for c in range(cols)] for r in range(rows)
         ]
-    
-    
+
+        self.won = False
+        self.lost = False
+        self.n_revealed = 0
+
     def reveal_all(self):
         for r, c in self._coordinates:
             self.reveal(r, c)
@@ -25,7 +30,14 @@ class Game:
     def reveal(self, r: int, c: int) -> bool:
         if self.mines[r][c]:
             self.board[r][c] = "X"
+            self.lost = True
             return False
+
+        if self.board[r][c] == "#":
+            self.n_revealed += 1
+
+        if self.rows * self.cols - self.n_mines == self.n_revealed:
+            self.won = True
 
         n = self.numbers[r][c]
         if n:
@@ -36,7 +48,6 @@ class Game:
                 if self.board[r1][c1] != " ":
                     self.reveal(r1, c1)
         return True
-
 
     def adjacent_mines(self, r: int, c: int) -> list[tuple[int, int]]:
         result: list[tuple[int, int]] = []
@@ -55,7 +66,13 @@ class Game:
                     result.append((r1, c1))
 
         return result
-        
+
+    def mark(self, r: int, c: int):
+        switch = {"#": "?", "?": "!", "!": "#"}
+        t = self.board[r][c]
+        if t in switch:
+            self.board[r][c] = switch[t]
+
     def pprint(self):
         for row in self.board:
             for c in row:

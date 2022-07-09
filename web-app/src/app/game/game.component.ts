@@ -7,6 +7,7 @@ import { PythonService } from '../python.service';
   styleUrls: ['./game.component.scss']
 })
 export class GameComponent implements OnInit {
+  private game_module?: any = null
   game?: any = null
   rows?: Array<number>
   cols?: Array<number>
@@ -15,13 +16,16 @@ export class GameComponent implements OnInit {
     private pythonService: PythonService
   ) {
     pythonService.getGame().then(
-        game => this.initGame(game)
+        module => {
+          this.game_module = module
+          this.newGame(4, 4, 1)
+        }
     )
   }
 
-  initGame(game: any) {
+  newGame(rows: number, cols: number, n_mines: number) {
     console.log("Initializing game")
-    this.game = game
+    this.game = this.game_module.Game(rows, cols, n_mines)
     this.rows = Array(this.game.rows).fill(0).map((x,i)=>i);
     this.cols = Array(this.game.cols).fill(0).map((x,i)=>i);
   }
@@ -30,7 +34,8 @@ export class GameComponent implements OnInit {
   }
 
   reveal(row: number, col: number) {
-    this.game.reveal(row, col)
+    // this.game.reveal(row, col)
+    this.game.mark(row, col)
   }
 
   getClassName(row: number, col: number) {

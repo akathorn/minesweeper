@@ -13,3 +13,11 @@ class="example-margin"
         </p>
     </mat-card>
 </div>
+
+<div *ngIf="game">
+    <p *ngIf="game.won">You won!</p>
+    <p *ngIf="game.lost">You lost!</p>
+</div>
+<button mat-button (click)="newGame(4, 4, 1)">
+    New game
+</button>

@@ -43,7 +43,7 @@ export class PythonService {
     await this.loadModules()
     return this.pyodide.runPython(`
       import game
-      game.Game()
+      game
     `)
   }
 
