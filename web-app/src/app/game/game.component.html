@@ -4,15 +4,7 @@ class="example-margin"
 [mode]="'indeterminate'">
 </mat-progress-spinner>
 
-<div *ngIf="game" class="board">
-    <mat-card class="mat-elevation-z8">
-        <p *ngFor="let row of rows" class="board-row">
-            <button mat-icon-button *ngFor="let col of cols" (click)="reveal(row, col)" class="game-tile" [class]="getClassName(row, col)">
-                {{getTile(row, col)}} 
-            </button>
-        </p>
-    </mat-card>
-</div>
+<app-board [newGameListener]="newGameListener" (reveal)="reveal($event)" (mark)="mark($event)"></app-board>
 
 <div *ngIf="game">
     <p *ngIf="game.won">You won!</p>

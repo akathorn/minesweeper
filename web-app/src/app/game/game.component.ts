@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Subject } from 'rxjs';
 import { PythonService } from '../python.service';
 
 @Component({
@@ -9,8 +10,7 @@ import { PythonService } from '../python.service';
 export class GameComponent implements OnInit {
   private game_module?: any = null
   game?: any = null
-  rows?: Array<number>
-  cols?: Array<number>
+  newGameListener: Subject<any> = new Subject()
 
   constructor(
     private pythonService: PythonService
@@ -26,37 +26,19 @@ export class GameComponent implements OnInit {
   newGame(rows: number, cols: number, n_mines: number) {
     console.log("Initializing game")
     this.game = this.game_module.Game(rows, cols, n_mines)
-    this.rows = Array(this.game.rows).fill(0).map((x,i)=>i);
-    this.cols = Array(this.game.cols).fill(0).map((x,i)=>i);
+    this.newGameListener.next(this.game)
   }
 
   ngOnInit(): void {
   }
 
-  reveal(row: number, col: number) {
-    // this.game.reveal(row, col)
-    this.game.mark(row, col)
+  reveal(pos: [number, number]) {
+    // this.game.mark(pos[0], pos[1])
+    this.game.reveal(pos[0], pos[1])
   }
 
-  getClassName(row: number, col: number) {
-    let tile = this.game.board.get(row).get(col)
-    if (tile == " ") {
-      tile = "blank"
-    } else if (tile == "#") {{
-      tile = "hidden"
-    }}
-    return 'game-tile-' + tile
-  }
-
-  getTile(row: number, col: number) {
-    let tile = this.game.board.get(row).get(col)
-    if (tile == " ") {
-      tile = "_"
-    } else if (tile == "#") {{
-      tile = "-"
-    }}
-
-    return tile
+  mark(pos: [number, number]) {
+    this.game.mark(pos[0], pos[1])
   }
 
 }
