@@ -1,4 +1,4 @@
 <div class="game-tile" [class]="getClassName(tile)">
     <span *ngIf="!isIcon(tile)">{{getTileChar(tile)}}</span>
-    <mat-icon *ngIf="isIcon(tile)">{{getTileIcon(tile)}}</mat-icon>
+    <mat-icon *ngIf="isIcon(tile)" class="icon">{{getTileIcon(tile)}}</mat-icon>
 </div>

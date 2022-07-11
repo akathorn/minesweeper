@@ -7,7 +7,7 @@ import { Subject } from 'rxjs';
   styleUrls: ['./board.component.scss']
 })
 export class BoardComponent implements OnInit {
-  threshold = 250;
+  threshold = 200;
   private lastPress: number = 0
 
   @Input() board!: any // Array<Array<string>> TODO

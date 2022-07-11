@@ -23,26 +23,27 @@ export class TileComponent implements OnInit {
   }
 
   isIcon(tile: string) {
-    return tile == "!" // || tile == "?"
+    return tile == "!" || tile == "?" || tile == "X"
   }
 
   getClassName(tile: string) {
-    if (tile == " ") {
-      tile = "blank"
-    } else if (tile == "#") {
-      tile = "hidden"
-    }
+    let r = (this.isIcon(tile) ? "game-tile-icon " : "") + "game-tile-"
 
-    if (this.isIcon(tile)) {
-      return "game-tile-icon game-tile-" + tile
-    } else {
-      return "game-tile-" + tile
+    switch(tile) {
+      case "#": return r + "hidden";
+      case " ": return r + "blank";
+      case "?": return r + "mark1";
+      case "!": return r + "mark2";
+      case "X": return r + "mine";
+      default: return r + tile;
     }
   }
 
   getTileIcon(tile: string) {
     switch(tile) {
-      case "!": return "warning";
+      case "!": return "dangerous";
+      case "?": return "not_listed_location";
+      case "X": return "heart_broken";
     }
 
     return "error"

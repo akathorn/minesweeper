@@ -1,10 +1,10 @@
 .game-tile {
     user-select: none;
     display: inline-block;
-    width: 50px;
+    width: 52px;
     text-align: center;
     font-size: 50px;
-    line-height: 100%;
+    line-height: 52px;
     margin: 0px;
 
     /* Prevent text selection */
@@ -51,7 +51,7 @@
     background-color: #777DA7;
     color: #777DA7;
     border-radius: 5px 5px 5px;
-    width: 48px;
+    width: 50px;
     border: 1px solid #404463;
 }
 
@@ -59,7 +59,24 @@
     color: transparent;
 }
 
+.game-tile-mark1 {
+    color: #4E148C
+}
+
+.game-tile-mark2 {
+    color: #873D48
+}
+
+.game-tile-mine {
+    color: red
+}
+
 .game-tile-icon {
-    // font-size: 500px;
-    // text-align: center;
+    // vertical-align: ;
+}
+
+.icon {
+    line-height: 22px;
+    vertical-align: middle;
+    transform: scale(2);
 }
