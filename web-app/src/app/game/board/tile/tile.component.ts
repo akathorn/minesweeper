@@ -1,5 +1,4 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { Observable, Subject } from 'rxjs';
 
 @Component({
   selector: 'app-tile',
@@ -8,10 +7,6 @@ import { Observable, Subject } from 'rxjs';
 })
 export class TileComponent implements OnInit {
   @Input() tile!: string
-  // @Input() pos!: [number, number]
-  // @Input() board!: any // Array<Array<string>> TODO
-  @Output() press = new EventEmitter();
-  // tileCharacter: Observable<string>
 
   constructor() { }
 

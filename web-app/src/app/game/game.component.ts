@@ -18,7 +18,7 @@ export class GameComponent implements OnInit {
     pythonService.getGame().then(
         module => {
           this.game_module = module
-          this.newGame(4, 4, 1)
+          this.newGame(16, 16, 40)
         }
     )
   }
