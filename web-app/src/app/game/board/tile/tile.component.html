@@ -1,3 +1,4 @@
-<button mat-icon-button class="game-tile" [class]="getClassName(tile)">
-    {{getTileChar(tile)}} 
-</button>
+<div class="game-tile" [class]="getClassName(tile)">
+    <span *ngIf="!isIcon(tile)">{{getTileChar(tile)}}</span>
+    <mat-icon *ngIf="isIcon(tile)">{{getTileIcon(tile)}}</mat-icon>
+</div>

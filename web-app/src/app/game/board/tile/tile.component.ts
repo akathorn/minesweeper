@@ -22,13 +22,32 @@ export class TileComponent implements OnInit {
     return tile
   }
 
+  isIcon(tile: string) {
+    return tile == "!" // || tile == "?"
+  }
+
   getClassName(tile: string) {
     if (tile == " ") {
       tile = "blank"
     } else if (tile == "#") {
       tile = "hidden"
     }
-    return 'game-tile-' + tile
+
+    if (this.isIcon(tile)) {
+      return "game-tile-icon game-tile-" + tile
+    } else {
+      return "game-tile-" + tile
+    }
   }
+
+  getTileIcon(tile: string) {
+    switch(tile) {
+      case "!": return "warning";
+    }
+
+    return "error"
+  }
+
+
 
 }

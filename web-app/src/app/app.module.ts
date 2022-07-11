@@ -8,9 +8,12 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import {MatButtonModule} from '@angular/material/button';
 import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+
 import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 import { BoardComponent } from './game/board/board.component';
 import { TileComponent } from './game/board/tile/tile.component';
+
 
 
 
@@ -27,7 +30,8 @@ import { TileComponent } from './game/board/tile/tile.component';
     BrowserAnimationsModule,
     MatButtonModule,
     MatCardModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    MatIconModule
   ],
   providers: [],
   bootstrap: [AppComponent]
