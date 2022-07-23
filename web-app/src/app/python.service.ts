@@ -37,6 +37,7 @@ export class PythonService {
       import os
       print("Modules loaded:", os.listdir())
     `)
+    await this.pyodide.loadPackage("numpy")
   }
 
   async getGame() {
