@@ -6,7 +6,7 @@ from typing import NamedTuple
 Position = tuple[int, int]
 
 
-class Game:
+class Board:
     def __init__(
         self,
         rows: int = 16,
@@ -16,56 +16,26 @@ class Game:
     ) -> None:
         self.rows = rows
         self.cols = cols
-        self._coordinates = list(itertools.product(range(rows), range(cols)))
+        self.coordinates = list(itertools.product(range(rows), range(cols)))
 
         self.n_mines = n_mines
         self.mines: list[list[int]] = mines or [
             [0 for _ in range(cols)] for _ in range(rows)
         ]
         if not mines:
-            for r, c in random.sample(self._coordinates, n_mines):
+            for r, c in random.sample(self.coordinates, n_mines):
                 self.mines[r][c] = 1
 
-        self.board: list[list[str]] = [["#" for _ in range(cols)] for _ in range(rows)]
+        self.tiles: list[list[str]] = [["#" for _ in range(cols)] for _ in range(rows)]
 
         self.numbers = [
-            [len(self.adjacent_mines(r, c)) for c in range(cols)] for r in range(rows)
+            [len(self._adjacent_mines(r, c)) for c in range(cols)] for r in range(rows)
         ]
 
-        self.won = False
-        self.lost = False
-        self.n_revealed = 0
-
-    def reveal_all(self):
-        for r, c in self._coordinates:
-            self.reveal(r, c)
-
-    def reveal(self, r: int, c: int) -> bool:
-        if self.mines[r][c]:
-            self.board[r][c] = "X"
-            self.lost = True
-            return False
-
-        if not self.is_revealed(r, c):
-            self.n_revealed += 1
-
-        if self.rows * self.cols - self.n_mines == self.n_revealed:
-            self.won = True
-
-        n = self.numbers[r][c]
-        if n:
-            self.board[r][c] = str(n)
-        else:
-            self.board[r][c] = " "
-            for r1, c1 in self.neighbours(r, c):
-                if not self.is_revealed(r1, c1):
-                    self.reveal(r1, c1)
-        return True
-
     def is_revealed(self, r: int, c: int) -> bool:
-        return self.board[r][c] not in {"#", "?", "!"}
+        return self.tiles[r][c] not in {"#", "?", "!"}
 
-    def adjacent_mines(self, r: int, c: int) -> list[Position]:
+    def _adjacent_mines(self, r: int, c: int) -> list[Position]:
         result: list[Position] = []
         for r1, c1 in self.neighbours(r, c):
             if (r1, c1) != (r, c) and self.mines[r1][c1]:
@@ -83,15 +53,9 @@ class Game:
 
         return result
 
-    def mark(self, r: int, c: int):
-        switch = {"#": "!", "!": "?", "?": "#"}
-        t = self.board[r][c]
-        if t in switch:
-            self.board[r][c] = switch[t]
-
     def pprint(self, print_=True):
         r = ""
-        for row in self.board:
+        for row in self.tiles:
             for c in row:
                 r += c
             r += "\n"
@@ -110,42 +74,23 @@ Equation = NamedTuple(
 
 
 class Solver:
-    def __init__(self, game: Game) -> None:
-        self.game = game
+    def __init__(self, board: Board) -> None:
+        self.board = board
 
         self.mines = set[Position]()
         self.safe = set[Position]()
         self.ambiguous = set[Position]()
         self.unreachable = set[Position](
-            itertools.product(range(game.rows), range(game.cols))
+            itertools.product(range(board.rows), range(board.cols))
         )
 
         self.update_assignments()
-
-    def solve_all(self) -> bool:
-        while not self.game.won:
-            if not self.solve_step():
-                return False
-        return True
-
-    def solve_step(self) -> bool:
-        move = self.next_move()
-        if not move:
-            print("Can't do anything")
-            return False
-
-        r, c = move
-        assert self.game.board[r][c] in {"#", "?", "!"}
-        self.game.reveal(r, c)
-        return True
 
     def next_move(self) -> Position | None:
         self.update_assignments()
 
         if len(self.safe) > 0:
-            e = self.safe.pop()
-            self.safe.add(e)
-            return e
+            return list(self.safe)[0]
 
         # We couldn't find a safe tile to reveal
         return None
@@ -156,9 +101,14 @@ class Solver:
         assignments = self._find_assignments_rec({}, [], set(equations))
         variables = set(assignments[0].keys())
 
-        self.ambiguous = set()
-        self.unreachable -= variables
+        self.unreachable = set()
+        for pos in self.board.coordinates:
+            if pos not in variables and not self.board.is_revealed(*pos):
+                self.unreachable.add(pos)
 
+        self.mines = set[Position]()
+        self.safe = set[Position]()
+        self.ambiguous = set[Position]()
         for var in variables:
             values = {ass[var] for ass in assignments}
             if len(values) > 1:
@@ -223,29 +173,96 @@ class Solver:
 
     def _generate_equations(self) -> list[Equation]:
         equations = list[Equation]()
-        for r in range(self.game.rows):
-            for c in range(self.game.cols):
-                tile = self.game.board[r][c]
+        for r in range(self.board.rows):
+            for c in range(self.board.cols):
+                tile = self.board.tiles[r][c]
                 if not tile.isdigit():
                     continue
 
                 vars_ = []
-                for n in self.game.neighbours(r, c):
-                    if not self.game.is_revealed(*n):
+                for n in self.board.neighbours(r, c):
+                    if not self.board.is_revealed(*n):
                         vars_.append(n)
                 equations.append(Equation(tuple(vars_), int(tile)))
 
         return equations
 
 
+class Game:
+    def __init__(
+        self,
+        rows: int = 16,
+        cols: int = 16,
+        n_mines: int = 40,
+        mines: list[list[int]] | None = None,
+    ) -> None:
+        self.board = Board(rows, cols, n_mines, mines)
+        self.solver = Solver(self.board)
+
+        self.won = False
+        self.lost = False
+        self.n_revealed = 0
+
+    def reveal_all(self):
+        for r, c in self.board.coordinates:
+            self.reveal(r, c)
+
+    def reveal(self, r: int, c: int) -> bool:
+        if self.board.mines[r][c]:
+            self.board.tiles[r][c] = "X"
+            self.solver.update_assignments()
+            self.lost = True
+            return False
+
+        if not self.board.is_revealed(r, c):
+            self.n_revealed += 1
+
+        if self.board.rows * self.board.cols - self.board.n_mines == self.n_revealed:
+            self.won = True
+
+        n = self.board.numbers[r][c]
+        if n:
+            self.board.tiles[r][c] = str(n)
+        else:
+            self.board.tiles[r][c] = " "
+            for r1, c1 in self.board.neighbours(r, c):
+                if not self.board.is_revealed(r1, c1):
+                    self.reveal(r1, c1)
+
+        self.solver.update_assignments()
+        return True
+
+    def mark(self, r: int, c: int):
+        switch = {"#": "!", "!": "?", "?": "#"}
+        t = self.board.tiles[r][c]
+        if t in switch:
+            self.board.tiles[r][c] = switch[t]
+
+    def solve_all(self) -> bool:
+        while not self.won:
+            if not self.solve_step():
+                return False
+        return True
+
+    def solve_step(self) -> bool:
+        move = self.solver.next_move()
+        if not move:
+            print("Can't do anything")
+            return False
+
+        assert not self.board.is_revealed(*move)
+        self.reveal(*move)
+        return True
+
+
 if __name__ == "__main__":
     game = Game(5, 5, 3)
     # game.reveal_all()
-    game.pprint()
+    game.board.pprint()
 
     while True:
         r, c = tuple(map(int, input("> ").split()))
         res = game.reveal(r, c)
         if not res:
             print("Boom!")
-        game.pprint()
+        game.board.pprint()

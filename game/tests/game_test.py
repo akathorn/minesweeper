@@ -32,13 +32,13 @@ def create_and_reveal(board_ascii: str):
 
 def assert_board(game: Game, board_ascii: str):
     ascii = dedent(board_ascii).strip().replace("-", " ") + "\n"
-    assert game.pprint(print_=False) == ascii
+    assert game.board.pprint(print_=False) == ascii
 
 
-def test_1(mocker: MockerFixture):
+def test_create():
     game = Game(rows=3, cols=4, n_mines=3)
 
-    assert sum(sum(col) for col in game.mines) == 3
+    assert sum(sum(col) for col in game.board.mines) == 3
     assert not game.won and not game.lost
 
 
@@ -115,8 +115,7 @@ def test_solve():
     """,
     )
 
-    solver = Solver(game)
-    solver.solve_step()
+    game.solve_step()
     assert game.won
 
     game = create_and_reveal(
@@ -127,8 +126,7 @@ def test_solve():
     """
     )
 
-    solver = Solver(game)
-    solver.solve_all()
+    game.solve_all()
     assert game.won
 
 
@@ -140,8 +138,7 @@ def test_two_components():
     """
     )
 
-    solver = Solver(game)
-    solver.solve_all()
+    game.solve_all()
     assert game.won
 
 
@@ -154,8 +151,8 @@ def test_unrevealed():
     """
     )
 
-    solver = Solver(game)
-    assert not solver.solve_all()
+    solver = game.solver
+    assert not game.solve_all()
     assert len(solver.mines) == 0
     assert len(solver.safe) == 0
     assert len(solver.ambiguous) == 0
@@ -170,10 +167,25 @@ def test_ambiguous():
     """
     )
 
-    solver = Solver(game)
-    move = solver.next_move()
+    move = game.solver.next_move()
     assert move is None
-    assert len(solver.ambiguous) == 2
+    assert len(game.solver.ambiguous) == 2
+
+
+def test_ambiguous2():
+    game = create_and_reveal(
+        """
+    -X
+    ??
+    ??
+    ?X
+    ?-
+    """
+    )
+
+    move = game.solver.next_move()
+    assert move == (4, 1)
+    assert len(game.solver.ambiguous) == 2
 
 
 def test_trapped():
@@ -185,9 +197,9 @@ def test_trapped():
     """
     )
 
-    solver = Solver(game)
-    assert not solver.solve_all()
+    solver = game.solver
+    assert not game.solve_all()
     assert len(solver.mines) == 3
     assert len(solver.safe) == 0
     assert len(solver.ambiguous) == 0
-    assert len(solver.unreachable) == 6
+    assert len(solver.unreachable) == 3
