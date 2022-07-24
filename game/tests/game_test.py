@@ -141,9 +141,25 @@ def test_two_components():
     )
 
     solver = Solver(game)
-    move = solver.next_move()
     solver.solve_all()
     assert game.won
+
+
+def test_unrevealed():
+    game = create_and_reveal(
+        """
+    ---
+    -X-
+    ---
+    """
+    )
+
+    solver = Solver(game)
+    assert not solver.solve_all()
+    assert len(solver.mines) == 0
+    assert len(solver.safe) == 0
+    assert len(solver.ambiguous) == 0
+    assert len(solver.unreachable) == 9
 
 
 def test_ambiguous():
@@ -156,4 +172,22 @@ def test_ambiguous():
 
     solver = Solver(game)
     move = solver.next_move()
-    assert move
+    assert move is None
+    assert len(solver.ambiguous) == 2
+
+
+def test_trapped():
+    game = create_and_reveal(
+        """
+    ---
+    XXX
+    ???
+    """
+    )
+
+    solver = Solver(game)
+    assert not solver.solve_all()
+    assert len(solver.mines) == 3
+    assert len(solver.safe) == 0
+    assert len(solver.ambiguous) == 0
+    assert len(solver.unreachable) == 6

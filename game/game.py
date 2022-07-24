@@ -113,6 +113,15 @@ class Solver:
     def __init__(self, game: Game) -> None:
         self.game = game
 
+        self.mines = set[Position]()
+        self.safe = set[Position]()
+        self.ambiguous = set[Position]()
+        self.unreachable = set[Position](
+            itertools.product(range(game.rows), range(game.cols))
+        )
+
+        self.update_assignments()
+
     def solve_all(self) -> bool:
         while not self.game.won:
             if not self.solve_step():
@@ -131,19 +140,35 @@ class Solver:
         return True
 
     def next_move(self) -> Position | None:
-        variables, equations = self._generate_equations()
+        self.update_assignments()
 
-        results = self._solve_rec({}, [], set(equations))
+        if len(self.safe) > 0:
+            e = self.safe.pop()
+            self.safe.add(e)
+            return e
 
-        assert len(results) == 1
-
-        for pos, val in results[0].items():
-            if not val:
-                return pos
-
+        # We couldn't find a safe tile to reveal
         return None
 
-    def _solve_rec(
+    def update_assignments(self):
+        equations = self._generate_equations()
+
+        assignments = self._find_assignments_rec({}, [], set(equations))
+        variables = set(assignments[0].keys())
+
+        self.ambiguous = set()
+        self.unreachable -= variables
+
+        for var in variables:
+            values = {ass[var] for ass in assignments}
+            if len(values) > 1:
+                self.ambiguous.add(var)
+            elif all(values):
+                self.mines.add(var)
+            else:
+                self.safe.add(var)
+
+    def _find_assignments_rec(
         self,
         assignment: dict[Position, int],
         next_equations: list[Equation],
@@ -183,7 +208,7 @@ class Solver:
 
             unsatisfied_equations.remove(eq)
             results.extend(
-                self._solve_rec(
+                self._find_assignments_rec(
                     assignment,
                     next_equations[1:] + neighbors,
                     unsatisfied_equations,
@@ -196,8 +221,7 @@ class Solver:
 
         return results
 
-    def _generate_equations(self) -> tuple[set[Position], list[Equation]]:
-        variables = set[Position]()
+    def _generate_equations(self) -> list[Equation]:
         equations = list[Equation]()
         for r in range(self.game.rows):
             for c in range(self.game.cols):
@@ -208,11 +232,10 @@ class Solver:
                 vars_ = []
                 for n in self.game.neighbours(r, c):
                     if not self.game.is_revealed(*n):
-                        variables.add(n)
                         vars_.append(n)
                 equations.append(Equation(tuple(vars_), int(tile)))
 
-        return variables, equations
+        return equations
 
 
 if __name__ == "__main__":
