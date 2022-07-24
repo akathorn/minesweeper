@@ -33,7 +33,7 @@ class Board:
         ]
 
     def is_revealed(self, r: int, c: int) -> bool:
-        return self.tiles[r][c] not in {"#", "?", "!"}
+        return self.tiles[r][c] not in {"#", "?", "!", "O"}
 
     def _adjacent_mines(self, r: int, c: int) -> list[Position]:
         result: list[Position] = []
@@ -276,6 +276,15 @@ class Game:
         assert not self.board.is_revealed(*move)
         self.reveal(*move)
         return True
+
+    def hint(self):
+        if any("O" in row for row in self.board.tiles):
+            return
+
+        tile = self.solver.next_move()
+        if tile:
+            r, c = tile
+            self.board.tiles[r][c] = "O"
 
 
 if __name__ == "__main__":

@@ -25,7 +25,7 @@ export class GameComponent implements OnInit {
 
   newGame(rows: number, cols: number, n_mines: number) {
     console.log("Initializing game")
-    this.game = this.game_module.Game(rows, cols, n_mines)
+    this.game = this.game_module.Game(rows, cols, n_mines, true)
     this.newGameListener.next(this.game)
   }
 

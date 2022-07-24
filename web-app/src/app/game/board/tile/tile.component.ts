@@ -23,18 +23,19 @@ export class TileComponent implements OnInit {
   }
 
   isIcon(tile: string) {
-    return tile == "!" || tile == "?" || tile == "X"
+    return tile == "!" || tile == "?" || tile == "X" || tile == "O"
   }
 
   getClassName(tile: string) {
     let r = (this.isIcon(tile) ? "game-tile-icon " : "") + "game-tile-"
 
     switch(tile) {
-      case "#": return r + "hidden";
+      case "#": return r + "unrevealed";
       case " ": return r + "blank";
-      case "?": return r + "mark1";
-      case "!": return r + "mark2";
+      case "!": return r + "mark1";
+      case "?": return r + "mark2";
       case "X": return r + "mine";
+      case "O": return r + "hint";
       default: return r + tile;
     }
   }
@@ -44,6 +45,7 @@ export class TileComponent implements OnInit {
       case "!": return "dangerous";
       case "?": return "not_listed_location";
       case "X": return "heart_broken";
+      case "O": return "star";
     }
 
     return "error"

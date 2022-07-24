@@ -10,10 +10,10 @@ class="example-margin"
     <p *ngIf="game.won">You won!</p>
     <p *ngIf="game.lost">You lost!</p>
     <p *ngIf="game.solver.safe.length == 0">Can't do anything!</p>
+    <button mat-button (click)="game.hint()">
+        Hint
+    </button>
+    <button mat-button (click)="newGame(16, 16, 40)">
+        New game
+    </button>
 </div>
-<button mat-button (click)="game.solve_step()">
-    Solve step
-</button>
-<button mat-button (click)="newGame(16, 16, 40)">
-    New game
-</button>
