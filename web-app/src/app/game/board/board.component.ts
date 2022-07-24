@@ -51,8 +51,8 @@ export class BoardComponent implements OnInit {
   }
 
   newGame(game: any) {
-    this.board = game.board
-    this.rows = Array(game.rows).fill(0).map((x,i)=>i);
-    this.cols = Array(game.cols).fill(0).map((x,i)=>i);
+    this.board = game.board.tiles
+    this.rows = Array(game.board.rows).fill(0).map((x,i)=>i);
+    this.cols = Array(game.board.cols).fill(0).map((x,i)=>i);
   }
 }

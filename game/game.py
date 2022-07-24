@@ -207,7 +207,7 @@ class Game:
         for r, c in self.board.coordinates:
             self.reveal(r, c)
 
-    def reveal(self, r: int, c: int) -> bool:
+    def reveal(self, r: int, c: int, update_solver: bool = True) -> bool:
         if self.board.mines[r][c]:
             self.board.tiles[r][c] = "X"
             self.solver.update_assignments()
@@ -227,9 +227,10 @@ class Game:
             self.board.tiles[r][c] = " "
             for r1, c1 in self.board.neighbours(r, c):
                 if not self.board.is_revealed(r1, c1):
-                    self.reveal(r1, c1)
+                    self.reveal(r1, c1, update_solver=False)
 
-        self.solver.update_assignments()
+        if update_solver:
+            self.solver.update_assignments()
         return True
 
     def mark(self, r: int, c: int):
