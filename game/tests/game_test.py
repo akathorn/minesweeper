@@ -132,6 +132,20 @@ def test_solve():
     assert game.won
 
 
+def test_two_components():
+    game = create_and_reveal(
+        """
+    -X???X-
+    ???????
+    """
+    )
+
+    solver = Solver(game)
+    move = solver.next_move()
+    solver.solve_all()
+    assert game.won
+
+
 def test_ambiguous():
     game = create_and_reveal(
         """

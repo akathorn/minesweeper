@@ -1,7 +1,7 @@
 import random
 import itertools
 from typing import NamedTuple
-import numpy as np
+
 
 Position = tuple[int, int]
 
@@ -100,6 +100,15 @@ class Game:
         return r
 
 
+Equation = NamedTuple(
+    "Equation",
+    [
+        ("variables", tuple[Position, ...]),
+        ("sum", int),
+    ],
+)
+
+
 class Solver:
     def __init__(self, game: Game) -> None:
         self.game = game
@@ -122,59 +131,86 @@ class Solver:
         return True
 
     def next_move(self) -> Position | None:
-        vars, eqs = self._generate_equations()
+        variables, equations = self._generate_equations()
 
-        vars_list = list(vars)
+        results = self._solve_rec({}, [], set(equations))
 
-        variables = np.zeros(len(vars_list) + 1, dtype=np.int32)
-        equations = np.zeros((len(eqs), 8), dtype=np.int32)
-        total_sum = np.zeros(len(eqs), dtype=np.int32)
+        assert len(results) == 1
 
-        for i, eq in enumerate(eqs):
-            positions, total_sum[i] = eq
-            for j, pos in enumerate(positions):
-                equations[i, j] = vars_list.index(pos) + 1
-
-        result = self._solve_rec(variables, equations, total_sum)
-
-        assert len(result) == 1
-
-        for index, value in enumerate(result[0][1:]):
-            if value == 0:
-                return vars_list[index]
+        for pos, val in results[0].items():
+            if not val:
+                return pos
 
         return None
 
-    def _solve_rec(self, variables, equations, total_sum, i=0):
-        if i == len(variables):
-            if (variables[equations].sum(axis=1) == total_sum).all():
-                return [variables.copy()]
-            else:
-                return []
+    def _solve_rec(
+        self,
+        assignment: dict[Position, int],
+        next_equations: list[Equation],
+        unsatisfied_equations: set[Equation],
+    ) -> list[dict[Position, int]]:
+        if next_equations:
+            eq = next_equations[0]
+        elif unsatisfied_equations:
+            eq = unsatisfied_equations.pop()
+            unsatisfied_equations.add(eq)
+        else:
+            # Base case
+            return [assignment.copy()]
 
-        result = self._solve_rec(variables, equations, total_sum, i + 1)
+        unassigned = set(eq.variables) - assignment.keys()
+        assigned = set(eq.variables) & assignment.keys()
 
-        variables[i] = 1
-        if (variables[equations].sum(axis=1) <= total_sum).all():
-            result.extend(self._solve_rec(variables, equations, total_sum, i + 1))
-        variables[i] = 0
+        diff = eq.sum - sum(assignment[var] for var in assigned)
+        if not (0 <= diff <= len(unassigned)):
+            # Invalid assignment
+            return []
 
-        return result
+        results = []
+        for variables in itertools.combinations(unassigned, diff):
+            # Make an assignment
+            for var in unassigned:
+                assignment[var] = 1 if var in variables else 0
 
-    def _generate_equations(self):
+            # Add neighboring equations to queue
+            neighbors = [
+                e
+                for e in (unsatisfied_equations - set(next_equations))
+                if set(variables) & set(e.variables) and e != eq
+            ]
+
+            assert not set(next_equations) - unsatisfied_equations
+
+            unsatisfied_equations.remove(eq)
+            results.extend(
+                self._solve_rec(
+                    assignment,
+                    next_equations[1:] + neighbors,
+                    unsatisfied_equations,
+                )
+            )
+            unsatisfied_equations.add(eq)
+
+            for var in unassigned:
+                del assignment[var]
+
+        return results
+
+    def _generate_equations(self) -> tuple[set[Position], list[Equation]]:
         variables = set[Position]()
-        equations = list[tuple[list[Position], int]]()
+        equations = list[Equation]()
         for r in range(self.game.rows):
             for c in range(self.game.cols):
                 tile = self.game.board[r][c]
                 if not tile.isdigit():
                     continue
-                equation = ([], int(tile))
+
+                vars_ = []
                 for n in self.game.neighbours(r, c):
                     if not self.game.is_revealed(*n):
                         variables.add(n)
-                        equation[0].append(n)
-                equations.append(equation)
+                        vars_.append(n)
+                equations.append(Equation(tuple(vars_), int(tile)))
 
         return variables, equations
 
