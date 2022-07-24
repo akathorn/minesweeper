@@ -1,3 +1,4 @@
+import random
 from textwrap import dedent
 from game import Game
 
@@ -13,7 +14,7 @@ def game_from_mines(mines_ascii: str):
     n_mines = mines_ascii.count("X")
     mines = [[1 if c == "X" else 0 for c in line] for line in lines]
 
-    return Game(rows, cols, n_mines, mines)
+    return Game(rows, cols, n_mines, False, mines)
 
 
 def reveal_from_ascii(game: Game, tiles: str):
@@ -203,3 +204,45 @@ def test_trapped():
     assert len(solver.safe) == 0
     assert len(solver.ambiguous) == 0
     assert len(solver.unreachable) == 3
+
+
+def test_guaranteed_small():
+    tests = 100
+
+    for _ in range(tests):
+        seed = random.randint(0, 10000000000)
+        random.seed(seed)
+        game = Game(5, 5, 3, guarantee_move=True)
+
+        game.solve_all()
+        if not game.won:
+            print(seed)
+        assert game.won
+
+
+def test_guaranteed_medium():
+    tests = 50
+
+    for _ in range(tests):
+        seed = random.randint(0, 10000000000)
+        random.seed(seed)
+        game = Game(9, 9, 10, guarantee_move=True)
+
+        game.solve_all()
+        if not game.won:
+            print(seed)
+        assert game.won
+
+
+def test_guaranteed_big():
+    tests = 1
+
+    for _ in range(tests):
+        seed = random.randint(0, 10000000000)
+        random.seed(seed)
+        game = Game(16, 16, 40, guarantee_move=True)
+
+        game.solve_all()
+        if not game.won:
+            print(seed)
+        assert game.won

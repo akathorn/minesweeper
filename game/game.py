@@ -73,6 +73,7 @@ Equation = NamedTuple(
 )
 
 
+# TODO: take into account the total number of mines
 class Solver:
     def __init__(self, board: Board) -> None:
         self.board = board
@@ -101,7 +102,7 @@ class Solver:
         assignments = self._find_assignments_rec({}, [], set(equations))
         variables = set(assignments[0].keys())
 
-        self.unreachable = set()
+        self.unreachable = set[Position]()
         for pos in self.board.coordinates:
             if pos not in variables and not self.board.is_revealed(*pos):
                 self.unreachable.add(pos)
@@ -194,6 +195,7 @@ class Game:
         rows: int = 16,
         cols: int = 16,
         n_mines: int = 40,
+        guarantee_move: bool = False,
         mines: list[list[int]] | None = None,
     ) -> None:
         self.board = Board(rows, cols, n_mines, mines)
@@ -202,6 +204,10 @@ class Game:
         self.won = False
         self.lost = False
         self.n_revealed = 0
+
+        self.guarantee_move = guarantee_move
+        if guarantee_move:
+            self.ensure_move()
 
     def reveal_all(self):
         for r, c in self.board.coordinates:
@@ -231,6 +237,8 @@ class Game:
 
         if update_solver:
             self.solver.update_assignments()
+        if self.guarantee_move:
+            self.ensure_move()
         return True
 
     def mark(self, r: int, c: int):
@@ -238,6 +246,20 @@ class Game:
         t = self.board.tiles[r][c]
         if t in switch:
             self.board.tiles[r][c] = switch[t]
+
+    def ensure_move(self):
+        if self.won or self.lost or self.solver.safe:
+            return
+
+        for r, c in self.solver.ambiguous:
+            if not self.board.mines[r][c]:
+                self.reveal(r, c)
+                return
+
+        for r, c in self.solver.unreachable:
+            if not self.board.mines[r][c]:
+                self.reveal(r, c)
+                return
 
     def solve_all(self) -> bool:
         while not self.won:
@@ -257,8 +279,9 @@ class Game:
 
 
 if __name__ == "__main__":
-    game = Game(5, 5, 3)
+    game = Game(5, 5, 3, guarantee_move=True)
     # game.reveal_all()
+    print(game.solver.safe)
     game.board.pprint()
 
     while True:
@@ -266,4 +289,5 @@ if __name__ == "__main__":
         res = game.reveal(r, c)
         if not res:
             print("Boom!")
+        print(game.solver.safe)
         game.board.pprint()
