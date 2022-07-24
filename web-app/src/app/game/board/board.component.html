@@ -1,8 +1,12 @@
 
 <div *ngIf="board" class="board">
-    <mat-card class="mat-elevation-z8" (mousedown)="press()">
+    <mat-card class="mat-elevation-z8">
         <p *ngFor="let row of rows" class="board-row">
-            <app-tile [tile]="board.get(row).get(col)" *ngFor="let col of cols" (click)="click(row, col)"></app-tile>
+            <app-tile
+                [tile]="board.get(row).get(col)"
+                *ngFor="let col of cols"
+                (click)="click(row, col)">
+            </app-tile>
         </p>
     </mat-card>
 </div>

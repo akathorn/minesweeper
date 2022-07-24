@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { Subject } from 'rxjs';
 
 @Component({
@@ -7,8 +7,8 @@ import { Subject } from 'rxjs';
   styleUrls: ['./board.component.scss']
 })
 export class BoardComponent implements OnInit {
-  threshold = 200;
-  private lastPress: number = 0
+  doubleClickThreshold = 250;
+  private lastClick: number = 0
 
   @Input() board!: any // Array<Array<string>> TODO
   @Input() newGameListener!: Subject<any>
@@ -22,23 +22,23 @@ export class BoardComponent implements OnInit {
   constructor() {
   }
 
-  press() {
-    this.lastPress = Date.now()
-  }
-
-  longPress(row: number, col: number) {
+  doubleClick(row: number, col: number) {
     this.reveal.next([row, col])
+    console.log("Double click")
   }
 
-  shortPress(row: number, col: number) {
+  singleClick(row: number, col: number) {
     this.mark.next([row, col])
+    console.log("Click")
   }
 
   click(row: number, col: number) {
-    if (Date.now() - this.lastPress > this.threshold) {
-      this.longPress(row, col)
+    if (Date.now() - this.lastClick < this.doubleClickThreshold) {
+      this.doubleClick(row, col)
+      this.lastClick = 0
     } else {
-      this.shortPress(row, col)
+      this.singleClick(row, col)
+      this.lastClick = Date.now()
     }
   }
 
