@@ -10,7 +10,7 @@ export class BoardComponent implements OnInit {
   doubleClickThreshold = 250;
   private lastClick: number = 0
 
-  @Input() board!: any // Array<Array<string>> TODO
+  board!: any // Array<Array<string>> TODO
   @Input() newGameListener!: Subject<any>
   
   @Output() reveal = new EventEmitter<[number, number]>();
@@ -24,12 +24,10 @@ export class BoardComponent implements OnInit {
 
   doubleClick(row: number, col: number) {
     this.reveal.next([row, col])
-    console.log("Double click")
   }
 
   singleClick(row: number, col: number) {
     this.mark.next([row, col])
-    console.log("Click")
   }
 
   click(row: number, col: number) {

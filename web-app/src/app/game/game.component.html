@@ -1,19 +1,21 @@
-<mat-progress-spinner
-*ngIf="!game"
-class="example-margin"
-[mode]="'indeterminate'">
-</mat-progress-spinner>
-
-<app-board [newGameListener]="newGameListener" (reveal)="reveal($event)" (mark)="mark($event)"></app-board>
-
-<div *ngIf="game">
-    <p *ngIf="game.won">You won!</p>
-    <p *ngIf="game.lost">You lost!</p>
-    <p *ngIf="game.solver.safe.length == 0">Can't do anything!</p>
-    <button mat-button (click)="game.hint()">
-        Hint
-    </button>
-    <button mat-button (click)="newGame(16, 16, 40)">
-        New game
-    </button>
+<div class="loading-spinner-div" *ngIf="!game">
+    <mat-progress-spinner
+        class="loading-spinner"
+        [mode]="'indeterminate'">
+    </mat-progress-spinner>
 </div>
+
+<app-header
+    *ngIf="game"
+    [game]="game"
+    (newGame)="newGame(16, 16, 40)"
+    (hint)="game.hint()"
+    >
+</app-header>
+
+<app-board
+    [newGameListener]="newGameListener"
+    (reveal)="reveal($event)"
+    (mark)="mark($event)">
+</app-board>
+

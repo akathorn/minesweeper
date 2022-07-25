@@ -1,0 +1,23 @@
+<mat-accordion class="header">
+    <mat-expansion-panel>
+        <mat-expansion-panel-header>
+            <mat-panel-description>
+                <button mat-button (click)="this.newGame.next(null)">
+                    <mat-icon>refresh</mat-icon>New game
+                </button>
+                <button mat-button (click)="this.hint.next(null)">
+                    <mat-icon>star</mat-icon>Hint
+                </button>
+                <button mat-button (click)="this.hint.next(null)">
+                    <mat-icon>replay</mat-icon>Undo
+                </button>
+                <p *ngIf="game.won">You won!</p>
+                <p *ngIf="game.lost">You lost!</p>
+            </mat-panel-description>
+        </mat-expansion-panel-header>
+        <!-- Content -->
+    </mat-expansion-panel>
+</mat-accordion>
+
+
+
