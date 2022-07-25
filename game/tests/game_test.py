@@ -246,3 +246,24 @@ def test_guaranteed_big():
         if not game.won:
             print(seed)
         assert game.won
+
+
+def test_reveal_after_lost():
+    game = create_and_reveal(
+        """
+    --X----
+    -X-----
+    ---X---
+    -X-----
+    -------
+    """
+    )
+
+    game.guarantee_move = True
+
+    game.reveal(0, 2)
+    game.reveal(1, 1)
+    game.reveal(2, 3)
+    game.reveal(3, 1)
+    game.reveal(0, 0)
+    assert game.lost

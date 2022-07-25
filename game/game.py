@@ -1,6 +1,13 @@
 import random
 import itertools
+import logging
+
 from typing import NamedTuple
+
+
+logging.basicConfig(
+    format="game.py [%(levelname)s]: %(message)s", level=logging.WARNING
+)
 
 
 Position = tuple[int, int]
@@ -100,6 +107,7 @@ class Solver:
         equations = self._generate_equations()
 
         assignments = self._find_assignments_rec({}, [], set(equations))
+        # logging.debug(f"Equations: {equations}")
         variables = set(assignments[0].keys())
 
         self.unreachable = set[Position]()
@@ -184,7 +192,9 @@ class Solver:
                 for n in self.board.neighbours(r, c):
                     if not self.board.is_revealed(*n):
                         vars_.append(n)
-                equations.append(Equation(tuple(vars_), int(tile)))
+
+                if vars_:
+                    equations.append(Equation(tuple(vars_), int(tile)))
 
         return equations
 
@@ -213,7 +223,9 @@ class Game:
         for r, c in self.board.coordinates:
             self.reveal(r, c)
 
-    def reveal(self, r: int, c: int, update_solver: bool = True) -> bool:
+    def reveal(
+        self, r: int, c: int, update_solver: bool = True, ensure_move: bool = True
+    ) -> bool:
         if self.board.mines[r][c]:
             self.board.tiles[r][c] = "X"
             self.solver.update_assignments()
@@ -233,11 +245,11 @@ class Game:
             self.board.tiles[r][c] = " "
             for r1, c1 in self.board.neighbours(r, c):
                 if not self.board.is_revealed(r1, c1):
-                    self.reveal(r1, c1, update_solver=False)
+                    self.reveal(r1, c1, update_solver=False, ensure_move=False)
 
         if update_solver:
             self.solver.update_assignments()
-        if self.guarantee_move:
+        if self.guarantee_move and ensure_move:
             self.ensure_move()
         return True
 
@@ -248,18 +260,27 @@ class Game:
             self.board.tiles[r][c] = switch[t]
 
     def ensure_move(self):
+        logging.debug("Ensuring move")
         if self.won or self.lost or self.solver.safe:
             return
 
+        logging.debug("Looking for an ambiguous tile")
         for r, c in self.solver.ambiguous:
             if not self.board.mines[r][c]:
+                logging.debug(f"Revealing {r, c}")
                 self.reveal(r, c)
                 return
 
-        for r, c in self.solver.unreachable:
+        logging.debug("Looking for an unreachable tile")
+        unreachable = list(self.solver.unreachable)
+        random.shuffle(unreachable)
+        for r, c in unreachable:
             if not self.board.mines[r][c]:
+                logging.debug(f"Revealing {r, c}")
                 self.reveal(r, c)
                 return
+
+        raise Exception("Couldn't ensure move!")
 
     def solve_all(self) -> bool:
         while not self.won:
