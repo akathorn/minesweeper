@@ -11,10 +11,12 @@ import {MatCardModule} from '@angular/material/card';
 import {MatIconModule} from '@angular/material/icon';
 import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 import {MatExpansionModule} from '@angular/material/expansion';
+import {MatDialogModule} from '@angular/material/dialog';
 
 import { BoardComponent } from './game/board/board.component';
 import { TileComponent } from './game/board/tile/tile.component';
 import { HeaderComponent } from './game/header/header.component';
+import { DialogComponent, DialogEnd, DialogHelp } from './dialog/dialog.component';
 
 
 
@@ -25,7 +27,10 @@ import { HeaderComponent } from './game/header/header.component';
     GameComponent,
     BoardComponent,
     TileComponent,
-    HeaderComponent
+    HeaderComponent,
+    DialogComponent,
+    DialogEnd,
+    DialogHelp,
   ],
   imports: [
     BrowserModule,
@@ -36,6 +41,7 @@ import { HeaderComponent } from './game/header/header.component';
     MatProgressSpinnerModule,
     MatIconModule,
     MatExpansionModule,
+    MatDialogModule,
   ],
   providers: [],
   bootstrap: [AppComponent]

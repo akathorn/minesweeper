@@ -1,6 +1,6 @@
 
 <div *ngIf="board" class="board">
-    <mat-card class="mat-elevation-z8">
+    <mat-card class="mat-elevation-z4 ">
         <p *ngFor="let row of rows" class="board-row">
             <app-tile
                 [tile]="board.get(row).get(col)"

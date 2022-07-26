@@ -1,0 +1,9 @@
+<h2 mat-dialog-title *ngIf="data.victory">You won!</h2>
+<h2 mat-dialog-title *ngIf="!data.victory">You lost!</h2>
+<!-- <mat-dialog-content class="mat-typography">
+  <p>Test</p>
+</mat-dialog-content> -->
+<mat-dialog-actions align="end">
+  <button mat-button [mat-dialog-close]="false">Continue</button>
+  <button mat-button [mat-dialog-close]="true" cdkFocusInitial>Play again</button>
+</mat-dialog-actions>

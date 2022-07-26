@@ -10,7 +10,7 @@
     [game]="game"
     (newGame)="newGame(16, 16, 40)"
     (hint)="game.hint()"
-    >
+    (help)="dialog.openHelp()">
 </app-header>
 
 <app-board
@@ -19,3 +19,7 @@
     (mark)="mark($event)">
 </app-board>
 
+<app-dialog (newGame)="newGame(16, 16, 40)"></app-dialog>
+
+<!-- <button (click)="gameEnd(true)">Win</button>
+<button (click)="gameEnd(false)">Lose</button> -->

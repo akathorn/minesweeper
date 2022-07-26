@@ -2,7 +2,7 @@ import random
 import itertools
 import logging
 
-from typing import NamedTuple
+from typing import Any, Callable, NamedTuple
 
 
 logging.basicConfig(
@@ -207,6 +207,7 @@ class Game:
         n_mines: int = 40,
         guarantee_move: bool = False,
         mines: list[list[int]] | None = None,
+        end_callback: Callable[[bool], Any] | None = None,
     ) -> None:
         self.board = Board(rows, cols, n_mines, mines)
         self.solver = Solver(self.board)
@@ -214,6 +215,7 @@ class Game:
         self.won = False
         self.lost = False
         self.n_revealed = 0
+        self.end_callback = end_callback
 
         self.guarantee_move = guarantee_move
         if guarantee_move:
@@ -227,15 +229,19 @@ class Game:
         self, r: int, c: int, update_solver: bool = True, ensure_move: bool = True
     ) -> bool:
         if self.board.mines[r][c]:
+            if self.end_callback and not (self.lost or self.won):
+                self.end_callback(False)
+            self.lost = True
             self.board.tiles[r][c] = "X"
             self.solver.update_assignments()
-            self.lost = True
             return False
 
         if not self.board.is_revealed(r, c):
             self.n_revealed += 1
 
         if self.board.rows * self.board.cols - self.board.n_mines == self.n_revealed:
+            if self.end_callback and not (self.lost or self.won):
+                self.end_callback(True)
             self.won = True
 
         n = self.board.numbers[r][c]

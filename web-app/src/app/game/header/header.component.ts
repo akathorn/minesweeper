@@ -10,6 +10,7 @@ export class HeaderComponent implements OnInit {
   @Input() game!: any
   @Output() newGame = new EventEmitter();
   @Output() hint = new EventEmitter();
+  @Output() help = new EventEmitter();
 
   constructor() { }
 
