@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 pytest-mock = "*"
 numpy = "*"
+pytest-profiling = "*"
 
 [dev-packages]
 black = "*"

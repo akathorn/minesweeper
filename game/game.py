@@ -2,7 +2,7 @@ import random
 import itertools
 import logging
 
-from typing import Any, Callable, NamedTuple
+from typing import Any, Callable, NamedTuple, Sequence
 
 
 logging.basicConfig(
@@ -71,13 +71,21 @@ class Board:
         return r
 
 
-Equation = NamedTuple(
-    "Equation",
-    [
-        ("variables", tuple[Position, ...]),
-        ("sum", int),
-    ],
-)
+class Equation:
+    def __init__(self, variables: Sequence[Position], total: int) -> None:
+        self.variables = set(variables)
+        self.total = total
+
+    def __hash__(self) -> int:
+        vars_ = list(self.variables)
+        vars_.sort()
+        return hash(tuple(vars_) + (self.total,))
+
+    def __eq__(self, other) -> int:
+        return hash(self) == hash(other)
+
+    def __repr__(self) -> str:
+        return f"Equation[{self.variables} = {self.total}]"
 
 
 # TODO: take into account the total number of mines
@@ -85,51 +93,88 @@ class Solver:
     def __init__(self, board: Board) -> None:
         self.board = board
 
-        self.mines = set[Position]()
-        self.safe = set[Position]()
         self.ambiguous = set[Position]()
         self.unreachable = set[Position](
             itertools.product(range(board.rows), range(board.cols))
         )
 
-        self.update_assignments()
+        self.assignment = dict[Position, int]()
+        self.equations = list[Equation]()
+
+    @property
+    def safe(self):
+        safe = set[Position]()
+        for pos, val in self.assignment.items():
+            if not val and not self.board.is_revealed(*pos):
+                safe.add(pos)
+        return safe
+
+    @property
+    def mines(self):
+        mines = set[Position]()
+        for pos, val in self.assignment.items():
+            if val and not self.board.is_revealed(*pos):
+                mines.add(pos)
+        return mines
 
     def next_move(self) -> Position | None:
         self.update_assignments()
 
-        if len(self.safe) > 0:
-            return list(self.safe)[0]
+        for pos, val in self.assignment.items():
+            if val == 0 and not self.board.is_revealed(*pos):
+                return pos
 
         # We couldn't find a safe tile to reveal
         return None
 
+    def reveal(self, pos: Position):
+        r, c = pos
+        self._assign_variable(pos, self.board.mines[r][c])
+
+        # Update the set
+        self.unreachable -= {pos}
+
+        # Add a new equation
+        tile = self.board.tiles[r][c]
+        if tile.isdigit():
+            total = int(tile)
+            vars_ = []
+            for neigh in self.board.neighbours(*pos):
+                self.unreachable -= {neigh}
+                if neigh in self.assignment:
+                    total -= self.assignment[neigh]
+                else:
+                    vars_.append(neigh)
+            if vars_:
+                self.equations.append(Equation(vars_, total))
+
+    def _assign_variable(self, pos: Position, value: int):
+        self.assignment[pos] = value
+
+        # Update the existing equations
+        for equation in self.equations:
+            if pos in equation.variables:
+                equation.total -= self.assignment[pos]
+                equation.variables.remove(pos)
+                if not equation.variables:
+                    self.equations.remove(equation)
+
     def update_assignments(self):
-        equations = self._generate_equations()
-
-        assignments = self._find_assignments_rec({}, [], set(equations))
+        guesses = self._find_assignments_rec({}, [], set(self.equations))
         # logging.debug(f"Equations: {equations}")
-        variables = set(assignments[0].keys())
+        variables = set(guesses[0].keys()) - set(self.assignment.keys())
 
-        self.unreachable = set[Position]()
-        for pos in self.board.coordinates:
-            if pos not in variables and not self.board.is_revealed(*pos):
-                self.unreachable.add(pos)
-
-        self.mines = set[Position]()
-        self.safe = set[Position]()
-        self.ambiguous = set[Position]()
+        self.ambiguous = set()
         for var in variables:
-            values = {ass[var] for ass in assignments}
+            values = {guess[var] for guess in guesses}
             if len(values) > 1:
                 self.ambiguous.add(var)
-            elif all(values):
-                self.mines.add(var)
             else:
-                self.safe.add(var)
+                self._assign_variable(var, 1 if all(values) else 0)
 
     def _find_assignments_rec(
         self,
-        assignment: dict[Position, int],
+        guess: dict[Position, int],
         next_equations: list[Equation],
         unsatisfied_equations: set[Equation],
     ) -> list[dict[Position, int]]:
@@ -140,12 +185,14 @@ class Solver:
             unsatisfied_equations.add(eq)
         else:
             # Base case
-            return [assignment.copy()]
+            return [guess.copy()]
 
-        unassigned = set(eq.variables) - assignment.keys()
-        assigned = set(eq.variables) & assignment.keys()
+        # assert not set(next_equations) - unsatisfied_equations
 
-        diff = eq.sum - sum(assignment[var] for var in assigned)
+        unassigned = set(eq.variables) - guess.keys()
+        assigned = set(eq.variables) & guess.keys()
+
+        diff = eq.total - sum(guess[var] for var in assigned)
         if not (0 <= diff <= len(unassigned)):
             # Invalid assignment
             return []
@@ -154,7 +201,7 @@ class Solver:
         for variables in itertools.combinations(unassigned, diff):
             # Make an assignment
             for var in unassigned:
-                assignment[var] = 1 if var in variables else 0
+                guess[var] = 1 if var in variables else 0
 
             # Add neighboring equations to queue
             neighbors = [
@@ -163,12 +210,10 @@ class Solver:
                 if set(variables) & set(e.variables) and e != eq
             ]
 
-            assert not set(next_equations) - unsatisfied_equations
-
             unsatisfied_equations.remove(eq)
             results.extend(
                 self._find_assignments_rec(
-                    assignment,
+                    guess,
                     next_equations[1:] + neighbors,
                     unsatisfied_equations,
                 )
@@ -176,27 +221,9 @@ class Solver:
             unsatisfied_equations.add(eq)
 
             for var in unassigned:
-                del assignment[var]
+                del guess[var]
 
         return results
-
-    def _generate_equations(self) -> list[Equation]:
-        equations = list[Equation]()
-        for r in range(self.board.rows):
-            for c in range(self.board.cols):
-                tile = self.board.tiles[r][c]
-                if not tile.isdigit():
-                    continue
-
-                vars_ = []
-                for n in self.board.neighbours(r, c):
-                    if not self.board.is_revealed(*n):
-                        vars_.append(n)
-
-                if vars_:
-                    equations.append(Equation(tuple(vars_), int(tile)))
-
-        return equations
 
 
 class Game:
@@ -233,7 +260,7 @@ class Game:
                 self.end_callback(False)
             self.lost = True
             self.board.tiles[r][c] = "X"
-            self.solver.update_assignments()
+            self.solver.reveal((r, c))
             return False
 
         if not self.board.is_revealed(r, c):
@@ -253,8 +280,7 @@ class Game:
                 if not self.board.is_revealed(r1, c1):
                     self.reveal(r1, c1, update_solver=False, ensure_move=False)
 
-        if update_solver:
-            self.solver.update_assignments()
+        self.solver.reveal((r, c))
         if self.guarantee_move and ensure_move:
             self.ensure_move()
         return True
@@ -267,7 +293,7 @@ class Game:
 
     def ensure_move(self):
         logging.debug("Ensuring move")
-        if self.won or self.lost or self.solver.safe:
+        if self.won or self.lost or self.solver.next_move():
             return
 
         logging.debug("Looking for an ambiguous tile")
