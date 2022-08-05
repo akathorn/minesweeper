@@ -235,7 +235,11 @@ class Game:
         guarantee_move: bool = False,
         mines: list[list[int]] | None = None,
         end_callback: Callable[[bool], Any] | None = None,
+        seed: float = -1,
     ) -> None:
+        self.seed = seed if seed >= 0 else random.randint(0, 10000000000)
+        random.seed(self.seed)
+
         self.board = Board(rows, cols, n_mines, mines)
         self.solver = Solver(self.board)
 
@@ -320,15 +324,14 @@ class Game:
                 return False
         return True
 
-    def solve_step(self) -> bool:
+    def solve_step(self) -> Position | None:
         move = self.solver.next_move()
         if not move:
             print("Can't do anything")
-            return False
-
-        assert not self.board.is_revealed(*move)
-        self.reveal(*move)
-        return True
+        else:
+            assert not self.board.is_revealed(*move)
+            self.reveal(*move)
+        return move
 
     def hint(self):
         if any("O" in row for row in self.board.tiles):

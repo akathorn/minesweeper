@@ -10,7 +10,9 @@
     [game]="game"
     (newGame)="newGame(16, 16, 40)"
     (hint)="game.hint()"
-    (help)="dialog.openHelp()">
+    (help)="dialog.openHelp()"
+    (autoSolve)="autoSolve()"
+    (debugInfo)="debugInfo()">
 </app-header>
 
 <app-board

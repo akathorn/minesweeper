@@ -58,4 +58,21 @@ export class GameComponent implements OnInit, AfterViewInit {
     this.dialog.openGameEnd(victory)
   }
 
+  autoSolve() {
+    if (!this.game) {
+      return
+    }
+
+    const move = this.game.solve_step()
+
+    if (move) {
+      setTimeout(() => this.autoSolve(), 100)
+    }
+  }
+
+  debugInfo() {
+    console.log("Game: " + this.game)
+    console.log("Game seed: " + this.game.seed)
+  }
+
 }

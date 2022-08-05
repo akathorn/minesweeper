@@ -16,7 +16,12 @@
                 </button>
             </mat-panel-description>
         </mat-expansion-panel-header>
-        <!-- Content -->
+        <button mat-button (click)="this.autoSolve.next(null)">
+            <mat-icon>precision_manufacturing</mat-icon>Auto-solve
+        </button>
+        <button mat-button (click)="this.debugInfo.next(null)">
+            <mat-icon>bug_report</mat-icon>Debug info
+        </button>
     </mat-expansion-panel>
 </mat-accordion>
 

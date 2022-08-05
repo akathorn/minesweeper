@@ -11,6 +11,8 @@ export class HeaderComponent implements OnInit {
   @Output() newGame = new EventEmitter();
   @Output() hint = new EventEmitter();
   @Output() help = new EventEmitter();
+  @Output() autoSolve = new EventEmitter();
+  @Output() debugInfo = new EventEmitter();
 
   constructor() { }
 
